@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10Roof Accounting</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117; --surface: #181b24; --card: #1c1f2b; --card-alt: #212536;
+  --border: #2a2e3d; --border-light: #353a4d; --text: #e8eaf0; --text-muted: #8b90a5; --text-dim: #5c6178;
+  --accent: #3ecfb4; --accent-dim: #2a9e87; --accent-glow: rgba(62,207,180,0.12);
+  --gold: #d4a853; --red: #e85c5c; --red-dim: rgba(232,92,92,0.12);
+  --green: #4ecb8d; --green-dim: rgba(78,203,141,0.12);
+  --blue: #5b9cf5; --blue-dim: rgba(91,156,245,0.12);
+}
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; line-height: 1.5; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; padding: 20px; }
+.setup-logo { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--gold)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 24px; color: var(--bg); font-family: 'Space Mono', monospace; }
+.setup-title { font-size: 24px; font-weight: 700; }
+.setup-sub { color: var(--text-muted); font-size: 14px; max-width: 480px; text-align: center; line-height: 1.6; }
+.setup-box { width: min(540px, 92vw); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.setup-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--accent); }
+.setup-box label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; margin-top: 14px; }
+.setup-box label:first-of-type { margin-top: 0; }
+.setup-box input, .setup-box textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: 'Space Mono', monospace; outline: none; }
+.setup-box input:focus, .setup-box textarea:focus { border-color: var(--accent); }
+.setup-note { margin-top: 14px; font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+.sn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--bg); font-size: 11px; font-weight: 700; margin-right: 6px; flex-shrink: 0; }
+.ss { display: flex; align-items: flex-start; gap: 0; margin-bottom: 12px; font-size: 13px; color: var(--text); line-height: 1.6; }
+.ss code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); }
+.setup-btn { display: block; width: 100%; padding: 12px; margin-top: 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+.setup-btn:hover { filter: brightness(1.1); }
+.setup-status { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
+.setup-status.success { display: block; background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.setup-status.error { display: block; background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+
+.header { border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--gold)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--bg); font-family: 'Space Mono', monospace; }
+.header-title { font-weight: 700; font-size: 16px; }
+.header-sub { font-size: 11px; color: var(--text-dim); }
+.header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.header-select, .header-input { padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif; }
+.header-input { width: 80px; }
+
+.tabs { padding: 12px 28px; display: flex; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { padding: 10px 20px; background: transparent; border: 1px solid transparent; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 14px; font-weight: 400; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; }
+.tab:hover { color: var(--text); background: var(--surface); }
+.tab.active { background: var(--accent-glow); border-color: var(--accent-dim); color: var(--accent); font-weight: 600; }
+
+.content { padding: 24px 28px; max-width: 1100px; margin: 0 auto; }
+.stats-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; flex: 1 1 200px; min-width: 170px; }
+.stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; }
+.stat-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.stat-icon { font-size: 22px; opacity: 0.5; }
+
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.panel-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
+.two-col { display: flex; gap: 20px; flex-wrap: wrap; }
+.two-col > * { flex: 1 1 320px; }
+
+.mini-bar { margin-bottom: 8px; }
+.mini-bar-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.mini-bar-label { font-size: 12px; color: var(--text-muted); }
+.mini-bar-val { font-size: 12px; color: var(--text); font-weight: 600; }
+.mini-bar-track { height: 6px; background: var(--border); border-radius: 3px; }
+.mini-bar-fill { height: 6px; border-radius: 3px; transition: width 0.5s ease; }
+
+.btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.btn:hover { filter: brightness(1.1); }
+.btn-primary { background: var(--accent); color: var(--bg); font-weight: 600; }
+.btn-secondary { background: var(--card-alt); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost { background: transparent; color: var(--text-muted); padding: 4px 8px; font-size: 12px; }
+.btn-ghost:hover { color: var(--text); }
+.btn-ghost.red { color: var(--red); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.section-title { font-size: 18px; font-weight: 600; }
+
+.form-panel { background: var(--card); border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+.form-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.field-input, .field-select { width: 100%; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; }
+.field-input:focus, .field-select:focus { border-color: var(--accent); }
+.field-select { cursor: pointer; }
+.checkbox-field { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-muted); }
+.checkbox-box { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--accent); }
+.checkbox-box.checked { border-color: var(--accent); background: var(--accent-glow); }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 12px; text-align: left; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.mono { font-family: 'Space Mono', monospace; }
+.accent { color: var(--accent); font-weight: 600; }
+.red-text { color: var(--red); }
+.badge { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 500; display: inline-block; }
+.badge-paid { background: var(--green-dim); color: var(--green); }
+.badge-invoiced { background: var(--blue-dim); color: var(--blue); }
+.badge-pending { background: var(--blue-dim); color: var(--blue); }
+.badge-overdue { background: var(--red-dim); color: var(--red); }
+
+.client-card { margin-bottom: 16px; }
+.client-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.client-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.client-meta { font-size: 12px; color: var(--text-muted); }
+.client-total { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
+
+.tax-divider { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+.tax-row { display: flex; justify-content: space-between; margin-top: 8px; }
+.tax-label { font-size: 13px; font-weight: 600; }
+.disclaimer { background: var(--card-alt); border: 1px solid var(--border); border-radius: 12px; padding: 20px; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+.disclaimer strong { color: var(--gold); }
+.tax-payment-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; }
+
+.empty { padding: 40px; text-align: center; color: var(--text-dim); font-size: 13px; }
+.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,17,23,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; color: var(--text-muted); font-size: 14px; }
+.spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.notification { position: fixed; top: 20px; right: 20px; z-index: 999; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; animation: fadeIn 0.3s ease; }
+.notification.success { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.notification.error { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+.notification.info { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+select option { background: var(--surface); color: var(--text); }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+@media (max-width: 640px) {
+  .header, .tabs, .content { padding-left: 16px; padding-right: 16px; }
+  .stat-card { min-width: 140px; } .stat-value { font-size: 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────
+let CONFIG = { WEBAPP_URL: '' };
+
+const EXPENSE_CATEGORIES = ['Software & Subscriptions','LinkedIn Premium/Recruiter','Marketing & Advertising','Travel & Meals','Office Supplies','Phone & Internet','Professional Services','Insurance','Vehicle/Mileage','Continuing Education','Miscellaneous'];
+const CLIENTS = ['Stream Data Centers','NICE','Hotwire Communications','Other'];
+const INCOME_STATUS = ['Pending','Invoiced','Paid','Overdue'];
+const TAX_RATE_FEDERAL = 0.22, TAX_RATE_STATE_CO = 0.044, TAX_RATE_SE = 0.153;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const today = () => new Date().toISOString().split('T')[0];
+function formatCurrency(n) { const num=Number(n)||0; const f=Math.abs(num).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); return num<0?`-$${f}`:`$${f}`; }
+function formatDate(d) { if(!d) return ''; return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function badgeClass(s) { return 'badge badge-'+(s||'pending').toLowerCase(); }
+function isDeductible(v) { return v==='TRUE'||v==='true'||v===true; }
+
+const state = { configured:false, loading:false, tab:'dashboard', filterYear:new Date().getFullYear(), filterQuarter:0, income:[], expenses:[], taxPayments:[], editingIncome:null, editingExpense:null, notification:null };
+
+// ─── API ─────────────────────────────────────────────────────
+async function apiCall(action, data={}) {
+  const payload = JSON.stringify({action,...data});
+  const r = await fetch(CONFIG.WEBAPP_URL, {
+    method: 'POST',
+    mode: 'cors',
+    redirect: 'follow',
+    body: payload,
+  });
+  const text = await r.text();
+  let result;
+  try { result = JSON.parse(text); } catch(e) { throw new Error('Invalid response: ' + text.substring(0,100)); }
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
+async function loadAllData() {
+  state.loading=true; render();
+  try {
+    const r = await apiCall('getAll');
+    state.income=r.income||[]; state.expenses=r.expenses||[]; state.taxPayments=r.taxPayments||[];
+    notify('Data loaded','success');
+  } catch(e) { notify('Load error: '+e.message,'error'); }
+  state.loading=false; render();
+}
+
+async function saveIncome(f) {
+  state.loading=true; render();
+  try {
+    const row = {ID:f.id||uid(),Date:f.date,Client:f.client,Candidate:f.candidate,Salary:f.salary,FeePercent:f.feePercent,FeeAmount:f.feeAmount,Description:f.description,Status:f.status};
+    const idx = state.income.findIndex(r=>r.ID===f.id);
+    if(idx>=0) await apiCall('updateRow',{sheet:'Income',rowIndex:idx,data:row});
+    else await apiCall('addRow',{sheet:'Income',data:row});
+    await loadAllData(); state.editingIncome=null; notify('Saved');
+  } catch(e) { notify('Error: '+e.message,'error'); }
+  state.loading=false; render();
+}
+
+async function deleteIncome(id) {
+  if(!confirm('Delete this record?')) return;
+  state.loading=true; render();
+  try { const i=state.income.findIndex(r=>r.ID===id); if(i>=0) await apiCall('deleteRow',{sheet:'Income',rowIndex:i}); await loadAllData(); } catch(e) { notify('Error: '+e.message,'error'); }
+}
+
+async function saveExpense(f) {
+  state.loading=true; render();
+  try {
+    const row = {ID:f.id||uid(),Date:f.date,Category:f.category,Vendor:f.vendor,Amount:f.amount,Description:f.description,TaxDeductible:f.taxDeductible};
+    const idx = state.expenses.findIndex(r=>r.ID===f.id);
+    if(idx>=0) await apiCall('updateRow',{sheet:'Expenses',rowIndex:idx,data:row});
+    else await apiCall('addRow',{sheet:'Expenses',data:row});
+    await loadAllData(); state.editingExpense=null; notify('Saved');
+  } catch(e) { notify('Error: '+e.message,'error'); }
+  state.loading=false; render();
+}
+
+async function deleteExpense(id) {
+  if(!confirm('Delete this record?')) return;
+  state.loading=true; render();
+  try { const i=state.expenses.findIndex(r=>r.ID===id); if(i>=0) await apiCall('deleteRow',{sheet:'Expenses',rowIndex:i}); await loadAllData(); } catch(e) { notify('Error: '+e.message,'error'); }
+}
+
+async function addTaxPayment() {
+  const amount=prompt('Payment amount:'); if(!amount) return;
+  const date=prompt('Date (YYYY-MM-DD):',today()); if(!date) return;
+  const type=prompt('Type (Federal/State/SE):','Federal');
+  state.loading=true; render();
+  try { await apiCall('addRow',{sheet:'TaxPayments',data:{ID:uid(),Date:date,Type:type||'Federal',Amount:amount,Notes:''}}); await loadAllData(); } catch(e) { notify('Error: '+e.message,'error'); }
+}
+
+async function deleteTaxPayment(id) {
+  const i=state.taxPayments.findIndex(r=>r.ID===id);
+  if(i>=0){ state.loading=true; render(); try { await apiCall('deleteRow',{sheet:'TaxPayments',rowIndex:i}); await loadAllData(); } catch(e) { notify('Error: '+e.message,'error'); } }
+}
+
+function exportIncomeCSV() { const f=gfi(); const h='Date,Client,Candidate,Salary,Fee%,Fee Amount,Description,Status\n'; const rows=f.map(r=>`"${r.Date}","${r.Client}","${r.Candidate}","${r.Salary}","${r.FeePercent}","${r.FeeAmount}","${r.Description}","${r.Status}"`).join('\n'); dlCSV(h+rows,`10roof-income-${gpl()}.csv`); }
+function exportExpenseCSV() { const f=gfe(); const h='Date,Category,Vendor,Amount,Description,Tax Deductible\n'; const rows=f.map(r=>`"${r.Date}","${r.Category}","${r.Vendor}","${r.Amount}","${r.Description}","${r.TaxDeductible}"`).join('\n'); dlCSV(h+rows,`10roof-expenses-${gpl()}.csv`); }
+function dlCSV(c,fn) { const b=new Blob([c],{type:'text/csv'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=fn; a.click(); URL.revokeObjectURL(u); }
+
+function gfi() { return state.income.filter(r=>{ const d=new Date(r.Date+'T00:00:00'); if(d.getFullYear()!==state.filterYear) return false; if(state.filterQuarter>0&&Math.ceil((d.getMonth()+1)/3)!==state.filterQuarter) return false; return true; }); }
+function gfe() { return state.expenses.filter(r=>{ const d=new Date(r.Date+'T00:00:00'); if(d.getFullYear()!==state.filterYear) return false; if(state.filterQuarter>0&&Math.ceil((d.getMonth()+1)/3)!==state.filterQuarter) return false; return true; }); }
+function gftp() { return state.taxPayments.filter(r=>new Date(r.Date+'T00:00:00').getFullYear()===state.filterYear); }
+function gpl() { return state.filterQuarter>0?`Q${state.filterQuarter}-${state.filterYear}`:`${state.filterYear}`; }
+
+function notify(msg,type='success') { state.notification={msg,type}; render(); setTimeout(()=>{state.notification=null;render();},3000); }
+
+async function testConnection() {
+  const url=document.getElementById('webapp-url')?.value?.trim();
+  if(!url){ notify('Paste the Web App URL','error'); return; }
+  CONFIG.WEBAPP_URL=url; localStorage.setItem('10roof_webapp_url',url);
+  state.loading=true; render();
+  try {
+    CONFIG.WEBAPP_URL=url;
+    const r=await apiCall('getAll');
+    state.income=r.income||[]; state.expenses=r.expenses||[]; state.taxPayments=r.taxPayments||[];
+    state.configured=true; state.loading=false;
+    notify('Connected to Google Sheets!','success'); render();
+  } catch(e) {
+    state.loading=false; render();
+    setTimeout(()=>{ const el=document.getElementById('setup-status'); if(el){ el.className='setup-status error'; el.textContent='Connection failed: '+e.message; }},50);
+  }
+}
+
+// ─── RENDER ──────────────────────────────────────────────────
+function render() {
+  const app=document.getElementById('app');
+  if(!state.configured){ app.innerHTML=renderSetup(); return; }
+  const fi=gfi(), fe=gfe(), pl=gpl();
+  app.innerHTML=`
+    ${state.loading?'<div class="loading-overlay"><div class="spinner"></div>Syncing...</div>':''}
+    ${state.notification?`<div class="notification ${state.notification.type}">${state.notification.msg}</div>`:''}
+    ${renderHeader(pl)}${renderTabs()}
+    <div class="content">
+      ${state.tab==='dashboard'?renderDash(fi,fe):''}
+      ${state.tab==='income'?renderIncome(fi,pl):''}
+      ${state.tab==='expenses'?renderExpenses(fe,pl):''}
+      ${state.tab==='clients'?renderClients(fi,pl):''}
+      ${state.tab==='tax'?renderTax(fi,fe):''}
+    </div>`;
+}
+
+function renderSetup() {
+  const saved=localStorage.getItem('10roof_webapp_url')||'';
+  return `
+    ${state.loading?'<div class="loading-overlay"><div class="spinner"></div>Testing connection...</div>':''}
+    ${state.notification?`<div class="notification ${state.notification.type}">${state.notification.msg}</div>`:''}
+    <div class="setup-screen">
+      <div class="setup-logo">10</div>
+      <div class="setup-title">10Roof Accounting</div>
+      <div class="setup-sub">One-time setup to connect this app to your Google Sheet. Takes about 5 minutes.</div>
+
+      <div class="setup-box">
+        <h3><span class="sn">1</span> Your Google Sheet</h3>
+        <div style="font-size:13px;color:var(--text);line-height:1.6">
+          You should already have your <strong>10Roof Accounting</strong> sheet with 3 tabs (Income, Expenses, TaxPayments) with headers in Row 1. ✅ Move to Step 2.
+        </div>
+      </div>
+
+      <div class="setup-box">
+        <h3><span class="sn">2</span> Add the Connector Script</h3>
+        <div class="ss"><span class="sn" style="font-size:10px">a</span><div>Open your Google Sheet, click <strong>Extensions</strong> → <strong>Apps Script</strong></div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">b</span><div>Delete any code in the editor. Paste the script below:</div></div>
+        <textarea id="script-code" readonly rows="12" style="width:100%;font-size:11px;line-height:1.4;background:var(--bg);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:'Space Mono',monospace;resize:vertical">function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var body = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var action = body.action;
+    if (action === 'getAll') {
+      return send({ income: sheetToJson(ss.getSheetByName('Income')), expenses: sheetToJson(ss.getSheetByName('Expenses')), taxPayments: sheetToJson(ss.getSheetByName('TaxPayments')) });
+    }
+    if (action === 'addRow') {
+      var sheet = ss.getSheetByName(body.sheet);
+      var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+      sheet.appendRow(headers.map(function(h){ return body.data[h] || ''; }));
+      return send({ success: true });
+    }
+    if (action === 'updateRow') {
+      var sheet = ss.getSheetByName(body.sheet);
+      var headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
+      var row = headers.map(function(h){ return body.data[h] || ''; });
+      sheet.getRange(body.rowIndex+2, 1, 1, row.length).setValues([row]);
+      return send({ success: true });
+    }
+    if (action === 'deleteRow') {
+      ss.getSheetByName(body.sheet).deleteRow(body.rowIndex + 2);
+      return send({ success: true });
+    }
+    return send({ error: 'Unknown action' });
+  } finally { lock.releaseLock(); }
+}
+function sheetToJson(sheet) {
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  var headers = data[0], rows = [];
+  for (var i=1; i<data.length; i++) {
+    var obj = {};
+    for (var j=0; j<headers.length; j++) {
+      var val = data[i][j];
+      if (val instanceof Date) val = Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      obj[headers[j]] = val;
+    }
+    rows.push(obj);
+  }
+  return rows;
+}
+function send(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }</textarea>
+        <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="document.getElementById('script-code').select();document.execCommand('copy');notify('Copied!','info')">Copy Script to Clipboard</button>
+        <div class="ss" style="margin-top:16px"><span class="sn" style="font-size:10px">c</span><div>Click <strong>Save</strong> (Cmd+S)</div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">d</span><div>Click the blue <strong>Deploy</strong> button (top right) → <strong>New deployment</strong></div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">e</span><div>Click the ⚙️ gear next to "Select type" → choose <strong>Web app</strong></div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">f</span><div>Set "Who has access" to <strong>Anyone</strong></div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">g</span><div>Click <strong>Deploy</strong>, then <strong>Authorize access</strong> when prompted</div></div>
+        <div class="ss"><span class="sn" style="font-size:10px">h</span><div>Copy the <strong>Web App URL</strong> it gives you</div></div>
+      </div>
+
+      <div class="setup-box">
+        <h3><span class="sn">3</span> Connect</h3>
+        <label>Web App URL</label>
+        <input id="webapp-url" value="${saved}" placeholder="https://script.google.com/macros/s/AKfyc.../exec" />
+        <div id="setup-status" class="setup-status"></div>
+        <button class="setup-btn" onclick="testConnection()">Connect & Load Data</button>
+        <div class="setup-note">Saved in your browser — you won't need to enter this again.</div>
+      </div>
+    </div>`;
+}
+
+function renderHeader(pl) {
+  return `<div class="header"><div class="header-left"><div class="logo">10</div><div>
+    <div class="header-title">10Roof Accounting</div><div class="header-sub">Technical Recruiting • ${pl}</div></div></div>
+    <div class="header-controls">
+      <input type="number" class="header-input" value="${state.filterYear}" min="2020" onchange="state.filterYear=Number(this.value);render()" />
+      <select class="header-select" onchange="state.filterQuarter=Number(this.value);render()">
+        <option value="0" ${state.filterQuarter===0?'selected':''}>Full Year</option>
+        <option value="1" ${state.filterQuarter===1?'selected':''}>Q1</option><option value="2" ${state.filterQuarter===2?'selected':''}>Q2</option>
+        <option value="3" ${state.filterQuarter===3?'selected':''}>Q3</option><option value="4" ${state.filterQuarter===4?'selected':''}>Q4</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadAllData()">⟲ Refresh</button>
+      <button class="btn btn-ghost" onclick="state.configured=false;render()">⚙ Settings</button>
+    </div></div>`;
+}
+
+function renderTabs() {
+  const t=[{id:'dashboard',l:'Dashboard',i:'◎'},{id:'income',l:'Income',i:'↗'},{id:'expenses',l:'Expenses',i:'↙'},{id:'clients',l:'Client P&L',i:'◈'},{id:'tax',l:'Tax Prep',i:'⬡'}];
+  return `<div class="tabs">${t.map(x=>`<button class="tab ${state.tab===x.id?'active':''}" onclick="state.tab='${x.id}';state.editingIncome=null;state.editingExpense=null;render()"><span>${x.i}</span>${x.l}</button>`).join('')}</div>`;
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────
+function renderDash(inc,exp) {
+  const ti=inc.reduce((s,r)=>s+(Number(r.FeeAmount)||0),0);
+  const pi=inc.filter(r=>r.Status==='Paid').reduce((s,r)=>s+(Number(r.FeeAmount)||0),0);
+  const pend=inc.filter(r=>r.Status!=='Paid').reduce((s,r)=>s+(Number(r.FeeAmount)||0),0);
+  const te=exp.reduce((s,r)=>s+(Number(r.Amount)||0),0);
+  const de=exp.filter(r=>isDeductible(r.TaxDeductible)).reduce((s,r)=>s+(Number(r.Amount)||0),0);
+  const net=pi-te, taxable=pi-de, estTax=Math.max(0,taxable*(TAX_RATE_FEDERAL+TAX_RATE_STATE_CO+TAX_RATE_SE));
+  const cpl={}; inc.forEach(r=>{const c=r.Client||'Other';if(!cpl[c])cpl[c]={r:0,n:0};cpl[c].r+=Number(r.FeeAmount)||0;cpl[c].n++;});
+  const ebc={}; exp.forEach(r=>{const c=r.Category||'Other';ebc[c]=(ebc[c]||0)+(Number(r.Amount)||0);});
+  return `<div class="stats-grid">
+    ${sc('Total Revenue',formatCurrency(ti),inc.length+' placements','var(--accent)','↗')}
+    ${sc('Collected',formatCurrency(pi),inc.filter(r=>r.Status==='Paid').length+' paid','var(--green)','✓')}
+    ${sc('Outstanding',formatCurrency(pend),'pending + invoiced','var(--gold)','◷')}
+    ${sc('Expenses',formatCurrency(te),exp.length+' entries','var(--red)','↙')}
+    ${sc('Net Income',formatCurrency(net),'after expenses',net>=0?'var(--green)':'var(--red)','◎')}
+    ${sc('Est. Tax',formatCurrency(estTax),'quarterly: '+formatCurrency(estTax/4),'var(--blue)','⬡')}
+  </div><div class="two-col">
+    <div class="panel"><div class="panel-title">Revenue by Client</div>
+      ${Object.entries(cpl).sort((a,b)=>b[1].r-a[1].r).map(([n,d])=>miniB(n+' ('+d.n+')',d.r,ti,'var(--accent)')).join('')}
+      ${Object.keys(cpl).length===0?'<div class="empty" style="padding:10px">No income yet</div>':''}
+    </div><div class="panel"><div class="panel-title">Expenses by Category</div>
+      ${Object.entries(ebc).sort((a,b)=>b[1]-a[1]).map(([c,a])=>miniB(c,a,te,'var(--gold)')).join('')}
+      ${Object.keys(ebc).length===0?'<div class="empty" style="padding:10px">No expenses yet</div>':''}
+    </div></div>`;
+}
+function sc(l,v,s,c,i){return `<div class="stat-card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="stat-label">${l}</div><div class="stat-value" style="color:${c}">${v}</div><div class="stat-sub">${s}</div></div><span class="stat-icon">${i}</span></div></div>`;}
+function miniB(l,d,m,c){const p=m>0?(d/m)*100:0;return `<div class="mini-bar"><div class="mini-bar-header"><span class="mini-bar-label">${l}</span><span class="mini-bar-val">${formatCurrency(d)}</span></div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.min(p,100)}%;background:${c}"></div></div></div>`;}
+
+// ─── INCOME ──────────────────────────────────────────────────
+function renderIncome(inc,pl) {
+  return `<div class="section-header"><h2 class="section-title">Placement Income</h2><div class="btn-row">
+    <button class="btn btn-secondary" onclick="exportIncomeCSV()">↓ Export</button>
+    <button class="btn btn-primary" onclick="state.editingIncome={id:'',date:'${today()}',client:'',candidate:'',salary:'',feePercent:'10',feeAmount:'',description:'',status:'Pending'};render()">+ New Placement</button>
+  </div></div>
+  ${state.editingIncome?renderIF(state.editingIncome):''}
+  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Client</th><th>Candidate</th><th>Salary</th><th>Fee</th><th>Status</th><th></th></tr></thead><tbody>
+  ${inc.map(r=>`<tr><td>${formatDate(r.Date)}</td><td style="font-weight:500">${r.Client}</td><td>${r.Candidate}</td>
+    <td class="mono">${formatCurrency(r.Salary)}</td><td class="mono accent">${formatCurrency(r.FeeAmount)}</td>
+    <td><span class="${badgeClass(r.Status)}">${r.Status}</span></td>
+    <td><button class="btn btn-ghost" onclick='state.editingIncome=${JSON.stringify({id:r.ID,date:r.Date,client:r.Client,candidate:r.Candidate,salary:String(r.Salary),feePercent:String(r.FeePercent),feeAmount:String(r.FeeAmount),description:r.Description,status:r.Status}).replace(/'/g,"&#39;")};render()'>Edit</button>
+    <button class="btn btn-ghost red" onclick="deleteIncome('${r.ID}')">×</button></td></tr>`).join('')}
+  </tbody></table>${inc.length===0?`<div class="empty">No income for ${pl}.</div>`:''}</div>`;
+}
+function renderIF(d) {
+  const ed=state.income.some(r=>r.ID===d.id);
+  const o=(a,v)=>a.map(x=>`<option value="${x}" ${x===v?'selected':''}>${x}</option>`).join('');
+  return `<div class="form-panel"><div class="form-title">${ed?'Edit':'New'} Placement</div><div class="form-grid">
+    <div class="field"><label class="field-label">Date</label><input type="date" class="field-input" value="${d.date}" onchange="state.editingIncome.date=this.value" /></div>
+    <div class="field"><label class="field-label">Client</label><select class="field-select" onchange="state.editingIncome.client=this.value"><option value="">Select...</option>${o(CLIENTS,d.client)}</select></div>
+    <div class="field"><label class="field-label">Candidate</label><input class="field-input" value="${d.candidate}" oninput="state.editingIncome.candidate=this.value" /></div>
+    <div class="field"><label class="field-label">Base Salary</label><input type="number" class="field-input" value="${d.salary}" oninput="state.editingIncome.salary=this.value;state.editingIncome.feeAmount=(Number(this.value||0)*Number(state.editingIncome.feePercent||10)/100).toFixed(2);render()" /></div>
+    <div class="field"><label class="field-label">Fee %</label><input type="number" class="field-input" value="${d.feePercent}" step="0.5" oninput="state.editingIncome.feePercent=this.value;state.editingIncome.feeAmount=(Number(state.editingIncome.salary||0)*Number(this.value||10)/100).toFixed(2);render()" /></div>
+    <div class="field"><label class="field-label">Fee Amount</label><input type="number" class="field-input" value="${d.feeAmount}" oninput="state.editingIncome.feeAmount=this.value" /></div>
+    <div class="field"><label class="field-label">Status</label><select class="field-select" onchange="state.editingIncome.status=this.value"><option value="">Select...</option>${o(INCOME_STATUS,d.status)}</select></div>
+    <div class="field"><label class="field-label">Notes</label><input class="field-input" value="${d.description||''}" oninput="state.editingIncome.description=this.value" /></div>
+  </div><div class="btn-row" style="margin-top:16px">
+    <button class="btn btn-primary" onclick="saveIncome(state.editingIncome)">Save</button>
+    <button class="btn btn-ghost" onclick="state.editingIncome=null;render()">Cancel</button></div></div>`;
+}
+
+// ─── EXPENSES ────────────────────────────────────────────────
+function renderExpenses(exp,pl) {
+  return `<div class="section-header"><h2 class="section-title">Business Expenses</h2><div class="btn-row">
+    <button class="btn btn-secondary" onclick="exportExpenseCSV()">↓ Export</button>
+    <button class="btn btn-primary" onclick="state.editingExpense={id:'',date:'${today()}',category:'',vendor:'',amount:'',description:'',taxDeductible:'TRUE'};render()">+ New Expense</button>
+  </div></div>
+  ${state.editingExpense?renderEF(state.editingExpense):''}
+  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Deductible</th><th></th></tr></thead><tbody>
+  ${exp.map(r=>`<tr><td>${formatDate(r.Date)}</td><td style="font-weight:500">${r.Category}</td><td>${r.Vendor}</td>
+    <td class="mono red-text">${formatCurrency(r.Amount)}</td><td>${isDeductible(r.TaxDeductible)?'✓':'—'}</td>
+    <td><button class="btn btn-ghost" onclick='state.editingExpense=${JSON.stringify({id:r.ID,date:r.Date,category:r.Category,vendor:r.Vendor,amount:String(r.Amount),description:r.Description,taxDeductible:String(r.TaxDeductible)}).replace(/'/g,"&#39;")};render()'>Edit</button>
+    <button class="btn btn-ghost red" onclick="deleteExpense('${r.ID}')">×</button></td></tr>`).join('')}
+  </tbody></table>${exp.length===0?`<div class="empty">No expenses for ${pl}.</div>`:''}</div>`;
+}
+function renderEF(d) {
+  const ed=state.expenses.some(r=>r.ID===d.id); const dd=isDeductible(d.taxDeductible);
+  const o=(a,v)=>a.map(x=>`<option value="${x}" ${x===v?'selected':''}>${x}</option>`).join('');
+  return `<div class="form-panel"><div class="form-title">${ed?'Edit':'New'} Expense</div><div class="form-grid">
+    <div class="field"><label class="field-label">Date</label><input type="date" class="field-input" value="${d.date}" onchange="state.editingExpense.date=this.value" /></div>
+    <div class="field"><label class="field-label">Category</label><select class="field-select" onchange="state.editingExpense.category=this.value"><option value="">Select...</option>${o(EXPENSE_CATEGORIES,d.category)}</select></div>
+    <div class="field"><label class="field-label">Vendor</label><input class="field-input" value="${d.vendor}" oninput="state.editingExpense.vendor=this.value" /></div>
+    <div class="field"><label class="field-label">Amount</label><input type="number" class="field-input" value="${d.amount}" step="0.01" oninput="state.editingExpense.amount=this.value" /></div>
+    <div class="field"><label class="field-label">Description</label><input class="field-input" value="${d.description||''}" oninput="state.editingExpense.description=this.value" /></div>
+    <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px">
+      <div class="checkbox-field" onclick="state.editingExpense.taxDeductible=state.editingExpense.taxDeductible==='TRUE'||state.editingExpense.taxDeductible==='true'?'FALSE':'TRUE';render()">
+        <div class="checkbox-box ${dd?'checked':''}">${dd?'✓':''}</div>Tax Deductible</div></div>
+  </div><div class="btn-row" style="margin-top:16px">
+    <button class="btn btn-primary" onclick="saveExpense(state.editingExpense)">Save</button>
+    <button class="btn btn-ghost" onclick="state.editingExpense=null;render()">Cancel</button></div></div>`;
+}
+
+// ─── CLIENT P&L ──────────────────────────────────────────────
+function renderClients(inc,pl) {
+  const cp={}; inc.forEach(r=>{const c=r.Client||'Other';if(!cp[c])cp[c]={r:0,n:0,rows:[]};cp[c].r+=Number(r.FeeAmount)||0;cp[c].n++;cp[c].rows.push(r);});
+  return `<h2 class="section-title" style="margin-bottom:20px">Client P&L — ${pl}</h2>
+    ${Object.entries(cp).sort((a,b)=>b[1].r-a[1].r).map(([n,d])=>{
+      const avg=d.rows.reduce((s,r)=>s+(Number(r.Salary)||0),0)/d.rows.length;
+      return `<div class="panel client-card"><div class="client-header"><div><div class="client-name">${n}</div>
+        <div class="client-meta">${d.n} placement${d.n!==1?'s':''} • Avg: ${formatCurrency(avg)}</div></div>
+        <div class="client-total">${formatCurrency(d.r)}</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Candidate</th><th>Salary</th><th>Fee</th><th>Status</th></tr></thead><tbody>
+        ${d.rows.map(r=>`<tr><td>${formatDate(r.Date)}</td><td>${r.Candidate}</td><td class="mono">${formatCurrency(r.Salary)}</td>
+          <td class="mono accent">${formatCurrency(r.FeeAmount)}</td><td><span class="${badgeClass(r.Status)}">${r.Status}</span></td></tr>`).join('')}
+        </tbody></table></div></div>`;}).join('')}
+    ${Object.keys(cp).length===0?`<div class="empty">No data for ${pl}.</div>`:''}`;
+}
+
+// ─── TAX ─────────────────────────────────────────────────────
+function renderTax(inc,exp) {
+  const p=inc.filter(r=>r.Status==='Paid').reduce((s,r)=>s+(Number(r.FeeAmount)||0),0);
+  const d=exp.filter(r=>isDeductible(r.TaxDeductible)).reduce((s,r)=>s+(Number(r.Amount)||0),0);
+  const tx=p-d,ef=Math.max(0,tx*TAX_RATE_FEDERAL),es=Math.max(0,tx*TAX_RATE_STATE_CO),ese=Math.max(0,tx*TAX_RATE_SE),et=ef+es+ese;
+  const tp=gftp(),paid=tp.reduce((s,r)=>s+(Number(r.Amount)||0),0),rem=Math.max(0,et-paid);
+  return `<h2 class="section-title" style="margin-bottom:20px">Tax Prep — ${state.filterYear}</h2>
+    <div class="stats-grid">${sc('Gross (Paid)',formatCurrency(p),'','var(--accent)','↗')}${sc('Deductible',formatCurrency(d),'','var(--gold)','↙')}${sc('Taxable',formatCurrency(tx),'','var(--text)','◎')}</div>
+    <div class="two-col" style="margin-bottom:28px">
+      <div class="panel"><div class="panel-title">Tax Breakdown</div>
+        ${miniB('Federal (22%)',ef,et,'var(--blue)')}${miniB('Colorado (4.4%)',es,et,'var(--accent)')}${miniB('SE Tax (15.3%)',ese,et,'var(--gold)')}
+        <div class="tax-divider"><span class="tax-label">Total</span><span class="mono" style="font-size:16px;font-weight:700;color:var(--red)">${formatCurrency(et)}</span></div>
+        <div class="tax-row"><span style="font-size:12px;color:var(--text-muted)">Quarterly</span><span class="mono" style="font-size:13px;color:var(--text-muted)">${formatCurrency(et/4)}</span></div></div>
+      <div class="panel"><div class="panel-title">Payments Made</div>
+        ${tp.map(r=>`<div class="tax-payment-row"><span>${formatDate(r.Date)} — ${r.Type}</span><div style="display:flex;gap:10px;align-items:center">
+          <span class="mono" style="color:var(--green)">${formatCurrency(r.Amount)}</span>
+          <button class="btn btn-ghost red" onclick="deleteTaxPayment('${r.ID}')">×</button></div></div>`).join('')}
+        ${tp.length===0?'<div style="color:var(--text-dim);font-size:13px;margin-bottom:12px">None recorded</div>':''}
+        <div class="tax-divider" style="flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between"><span class="tax-label">Paid</span><span class="mono" style="color:var(--green)">${formatCurrency(paid)}</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="tax-label" style="color:var(--red)">Remaining</span><span class="mono" style="color:var(--red)">${formatCurrency(rem)}</span></div></div>
+        <div style="margin-top:16px"><button class="btn btn-secondary" onclick="addTaxPayment()">+ Record Payment</button></div></div></div>
+    <div class="disclaimer"><strong>⚠ Disclaimer:</strong> Rough estimates using flat rates (22% federal, 4.4% CO, 15.3% SE). Consult a CPA. CO quarterly due: Apr 15, Jun 15, Sep 15, Jan 15.</div>`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+const savedUrl = localStorage.getItem('10roof_webapp_url');
+if (savedUrl) { CONFIG.WEBAPP_URL=savedUrl; state.configured=true; render(); loadAllData(); }
+else { render(); }
+</script>
+</body>
+</html>
